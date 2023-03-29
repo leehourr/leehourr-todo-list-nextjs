@@ -2,8 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import TodoItem from "../components/TodoItem";
 import { api } from "../utils/baseUrl";
-import { isBot } from "next/dist/server/web/spec-extension/user-agent";
-import { getTodo } from "../utils/getTodo";
 
 const Home = ({ todo_list }) => {
   const [todos, setTodos] = useState([]);
@@ -15,6 +13,8 @@ const Home = ({ todo_list }) => {
   const [todoId, setTodoId] = useState();
   const [matchResult, setMatchResult] = useState([]);
   const [startTyping, setStartTyping] = useState(false);
+  const [confirm, setConfirm] = useState(false);
+
   // console.log(todos);
 
   // console.log(newTodo !== "" && matchResult.length > 0);
@@ -84,7 +84,7 @@ const Home = ({ todo_list }) => {
       // console.log(err.response);
       setTimeout(() => {
         setTodos((prev) => prev.filter((todo) => todo.id !== newTodoObject.id));
-        setErrorMessage(err.response.data.message);
+        setErrorMessage("Failed to add a new task! Try reload the page");
       }, 2000);
     }
     setNewTodo("");
@@ -101,12 +101,14 @@ const Home = ({ todo_list }) => {
     }
     try {
       setTodos((prev) => prev.filter((todo) => todo.id !== id));
-      await axios.post("/api/remove-todo", { id });
+      const res = await axios.post("/api/remove-todo", { id });
+      console.log(res);
     } catch (err) {
       // console.log(err);
+      // console.log("after delete");
       setTimeout(() => {
-        setTodos(todo_list.data);
-        setErrorMessage(err.response.data.message);
+        setTodos(todo_list);
+        setErrorMessage("Failed to remove! Try reload the page");
       }, 2000);
     }
   };
@@ -136,8 +138,8 @@ const Home = ({ todo_list }) => {
     } catch (err) {
       // console.log(err);
       setTimeout(() => {
-        setTodos(todo_list.data);
-        setErrorMessage(err.response.data.message);
+        setTodos(todo_list);
+        setErrorMessage("Failed to update! Try reload the page");
       }, 2000);
     }
   };
@@ -155,8 +157,8 @@ const Home = ({ todo_list }) => {
     } catch (err) {
       // console.log(err);
       setTimeout(() => {
-        setTodos(todo_list.data);
-        setErrorMessage(err.response.data.message);
+        setTodos(todo_list);
+        setErrorMessage("Failed to update! Try reload the page");
       }, 2000);
     }
   };
@@ -171,35 +173,35 @@ const Home = ({ todo_list }) => {
   };
 
   const editHandler = async (e) => {
-    if (e.key === "Enter") {
-      // console.log("submit");
-      setErrorMessage("");
-      // console.log(newTodo);
-      try {
-        if (checkIfListExist(newTodo)) {
-          return;
-        }
-        const updatedTodo = todos.map((todo) =>
-          todo.id === todoId ? { ...todo, todo: newTodo } : todo
-        );
-
-        setTodos(updatedTodo);
-        const res = await axios.post("/api/update-todo", {
-          id: todoId,
-          updatedTodo: updatedTodo.find((todo) => todo.id === todoId),
-        });
-        // console.log(res);
-        if (res.status === 200) {
-          setIsEdit(false);
-          setNewTodo("");
-        }
-      } catch (err) {
-        setTimeout(() => {
-          setTodos(todo_list.data);
-          setErrorMessage(err?.response?.data.message);
-          setNewTodo("");
-        }, 2000);
+    // console.log("submit");
+    setErrorMessage("");
+    setConfirm(true);
+    console.log(newTodo);
+    try {
+      if (checkIfListExist(newTodo)) {
+        return;
       }
+      const updatedTodo = todos.map((todo) =>
+        todo.id === todoId ? { ...todo, todo: newTodo } : todo
+      );
+
+      setTodos(updatedTodo);
+      const res = await axios.post("/api/update-todo", {
+        id: todoId,
+        updatedTodo: updatedTodo.find((todo) => todo.id === todoId),
+      });
+      // console.log(res);
+      if (res.status === 200) {
+        setIsEdit(false);
+        setNewTodo("");
+        setConfirm(false);
+      }
+    } catch (err) {
+      setTimeout(() => {
+        setTodos(todo_list);
+        setErrorMessage("Failed to update! Try reload the page");
+        setNewTodo("");
+      }, 2000);
     }
   };
 
@@ -207,7 +209,7 @@ const Home = ({ todo_list }) => {
     for (const i of todos) {
       if (i.todo.trim() === newTodo) {
         // console.log("true");
-        setErrorMessage("This task already existed in  the list");
+        setErrorMessage("This task already existed in the list");
         return true;
       }
     }
@@ -225,7 +227,9 @@ const Home = ({ todo_list }) => {
             // setIsEdit(false);
             // setMatchResult([]);
           }}
-          onKeyDown={isEdit ? editHandler : undefined}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && isEdit) setConfirm(true);
+          }}
           ref={inputRef}
           type="text"
           value={newTodo}
@@ -237,6 +241,24 @@ const Home = ({ todo_list }) => {
           Add Todo
         </button>
       </form>
+      {confirm && (
+        <div>
+          <button
+            onClick={() => {
+              setConfirm(false);
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => {
+              editHandler();
+            }}
+          >
+            Confirm edit
+          </button>
+        </div>
+      )}
       {newTodo !== "" && matchResult.length > 0 ? (
         <div>
           <h2>Match result</h2>
