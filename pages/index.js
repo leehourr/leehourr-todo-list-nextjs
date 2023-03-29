@@ -28,6 +28,7 @@ const Home = ({ todo_list }) => {
     console.log(input.length, input);
     if (input === "") {
       // console.log("true");
+      setIsEdit(false);
       setErrorMessage("");
       setMatchResult([]);
       return;
@@ -59,12 +60,8 @@ const Home = ({ todo_list }) => {
       return;
     }
 
-    for (const i of todos) {
-      if (i.todo.trim() === newTodo) {
-        // console.log("true");
-        setErrorMessage("This task already existed in  the list");
-        return;
-      }
+    if (checkIfListExist(newTodo)) {
+      return;
     }
     // console.log("asd");
     const now = new Date();
@@ -179,6 +176,9 @@ const Home = ({ todo_list }) => {
       setErrorMessage("");
       // console.log(newTodo);
       try {
+        if (checkIfListExist(newTodo)) {
+          return;
+        }
         const updatedTodo = todos.map((todo) =>
           todo.id === todoId ? { ...todo, todo: newTodo } : todo
         );
@@ -203,6 +203,15 @@ const Home = ({ todo_list }) => {
     }
   };
 
+  const checkIfListExist = (newTodo) => {
+    for (const i of todos) {
+      if (i.todo.trim() === newTodo) {
+        // console.log("true");
+        setErrorMessage("This task already existed in  the list");
+        return true;
+      }
+    }
+  };
   return (
     <main>
       <h1>Todo List</h1>
@@ -213,7 +222,7 @@ const Home = ({ todo_list }) => {
           }}
           onBlur={() => {
             setStartTyping(false);
-            setIsEdit(false);
+            // setIsEdit(false);
             // setMatchResult([]);
           }}
           onKeyDown={isEdit ? editHandler : undefined}
