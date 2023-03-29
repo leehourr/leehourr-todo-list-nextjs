@@ -1,15 +1,15 @@
-import { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
-import TodoItem from '../components/TodoItem';
-import { api } from './api/baseUrl';
-import { isBot } from 'next/dist/server/web/spec-extension/user-agent';
+import { useState, useEffect, useRef } from "react";
+import axios from "axios";
+import TodoItem from "../components/TodoItem";
+import { api } from "./api/baseUrl";
+import { isBot } from "next/dist/server/web/spec-extension/user-agent";
 
 const Home = ({ todo_list }) => {
   const [todos, setTodos] = useState([]);
   const inputRef = useRef(null);
-  const [newTodo, setNewTodo] = useState('');
+  const [newTodo, setNewTodo] = useState("");
   // const [editedTodo, setEditedTodo] = useState("");
-  const [errorMessage, setErrorMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState("");
   const [isEdit, setIsEdit] = useState(false);
   const [todoId, setTodoId] = useState();
   const [matchResult, setMatchResult] = useState([]);
@@ -25,9 +25,9 @@ const Home = ({ todo_list }) => {
     let input = e.target.value;
     setNewTodo(input);
     console.log(input.length, input);
-    if (input === '') {
+    if (input === "") {
       // console.log("true");
-      setErrorMessage('');
+      setErrorMessage("");
       setMatchResult([]);
       return;
     }
@@ -53,15 +53,15 @@ const Home = ({ todo_list }) => {
   //add todo
   const addTodoHandler = async (e) => {
     e.preventDefault();
-    setErrorMessage('');
-    if (newTodo.trim() === '') {
+    setErrorMessage("");
+    if (newTodo.trim() === "") {
       return;
     }
 
     for (const i of todos) {
       if (i.todo.trim() === newTodo) {
         // console.log("true");
-        setErrorMessage('This task already existed in  the list');
+        setErrorMessage("This task already existed in  the list");
         return;
       }
     }
@@ -76,7 +76,7 @@ const Home = ({ todo_list }) => {
     };
     setTodos([...todos, newTodoObject]);
     try {
-      await axios.post('/api/new-todo', {
+      await axios.post("/api/new-todo", {
         todo: newTodo,
         isCompleted: false,
         createdAt: timestamp,
@@ -89,21 +89,21 @@ const Home = ({ todo_list }) => {
         setErrorMessage(err.response.data.message);
       }, 2000);
     }
-    setNewTodo('');
+    setNewTodo("");
   };
 
   //remove todo
   const removeHandler = async (id) => {
-    setErrorMessage('');
+    setErrorMessage("");
     if (todos.length === 1) {
       setErrorMessage(
-        'List should not be empty! Either add a new task or complete the existing one.'
+        "List should not be empty! Either add a new task or complete the existing one."
       );
       return;
     }
     try {
       setTodos((prev) => prev.filter((todo) => todo.id !== id));
-      await axios.post('/api/remove-todo', { id });
+      await axios.post("/api/remove-todo", { id });
     } catch (err) {
       // console.log(err);
       setTimeout(() => {
@@ -125,13 +125,13 @@ const Home = ({ todo_list }) => {
   //   setTodos(updatedTodos);
   // };
   const markAsComplete = async (id) => {
-    setErrorMessage('');
+    setErrorMessage("");
     try {
       const updatedTodo = todos.map((todo) =>
         todo.id === id ? { ...todo, isCompleted: true } : todo
       );
       setTodos(updatedTodo);
-      await axios.post('/api/update-todo', {
+      await axios.post("/api/update-todo", {
         id,
         updatedTodo: updatedTodo.find((todo) => todo.id === id),
       });
@@ -144,13 +144,13 @@ const Home = ({ todo_list }) => {
     }
   };
   const markAsInomplete = async (id) => {
-    setErrorMessage('');
+    setErrorMessage("");
     try {
       const updatedTodo = todos.map((todo) =>
         todo.id === id ? { ...todo, isCompleted: false } : todo
       );
       setTodos(updatedTodo);
-      await axios.post('/api/update-todo', {
+      await axios.post("/api/update-todo", {
         id,
         updatedTodo: updatedTodo.find((todo) => todo.id === id),
       });
@@ -173,9 +173,9 @@ const Home = ({ todo_list }) => {
   };
 
   const editHandler = async (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       // console.log("submit");
-      setErrorMessage('');
+      setErrorMessage("");
       // console.log(newTodo);
       try {
         const updatedTodo = todos.map((todo) =>
@@ -183,20 +183,20 @@ const Home = ({ todo_list }) => {
         );
 
         setTodos(updatedTodo);
-        const res = await axios.post('/api/update-todo', {
+        const res = await axios.post("/api/update-todo", {
           id: todoId,
           updatedTodo: updatedTodo.find((todo) => todo.id === todoId),
         });
         // console.log(res);
         if (res.status === 200) {
           setIsEdit(false);
-          setNewTodo('');
+          setNewTodo("");
         }
       } catch (err) {
         setTimeout(() => {
           setTodos(todo_list.data);
           setErrorMessage(err?.response?.data.message);
-          setNewTodo('');
+          setNewTodo("");
         }, 2000);
       }
     }
@@ -227,7 +227,7 @@ const Home = ({ todo_list }) => {
           Add Todo
         </button>
       </form>
-      {newTodo !== '' && matchResult.length > 0 ? (
+      {newTodo !== "" && matchResult.length > 0 ? (
         <div>
           <h2>Match result</h2>
           {matchResult.map((result, index) => (
@@ -235,12 +235,12 @@ const Home = ({ todo_list }) => {
           ))}
         </div>
       ) : (
-        newTodo !== '' &&
+        newTodo !== "" &&
         startTyping &&
         !isEdit && <h2>No result. Create a new one instead!</h2>
       )}
 
-      {errorMessage !== '' && <h3>{errorMessage}</h3>}
+      {errorMessage !== "" && <h3>{errorMessage}</h3>}
       <ul>
         {todos
           .sort((a, b) => {
@@ -274,7 +274,7 @@ Tho its just a todo list app but still a good practice
 that cause the site to preload from the server so SSG would be a better option*/
 export async function getStaticProps() {
   try {
-    const { ...res } = await api.get('http://localhost:3000/api/get-todo');
+    const { ...res } = await api.get("http://localhost:3000/api/get-todo");
 
     return {
       props: {
