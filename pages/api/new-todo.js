@@ -1,4 +1,4 @@
-import { api } from "./baseUrl";
+import { api } from "../../utils/baseUrl";
 
 export default async function handler(req, res) {
   try {

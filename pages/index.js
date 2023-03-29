@@ -3,6 +3,7 @@ import axios from "axios";
 import TodoItem from "../components/TodoItem";
 import { api } from "./api/baseUrl";
 import { isBot } from "next/dist/server/web/spec-extension/user-agent";
+import { getTodo } from "../utils/getTodo";
 
 const Home = ({ todo_list }) => {
   const [todos, setTodos] = useState([]);
@@ -274,7 +275,7 @@ Tho its just a todo list app but still a good practice
 that cause the site to preload from the server so SSG would be a better option*/
 export async function getStaticProps() {
   try {
-    const { ...res } = await api.get("http://localhost:3000/api/get-todo");
+    const { ...res } = await getTodo();
 
     return {
       props: {
