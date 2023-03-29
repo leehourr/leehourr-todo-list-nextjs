@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import TodoItem from "../components/TodoItem";
-import { api } from "./api/baseUrl";
+import { api } from "../utils/baseUrl";
 import { isBot } from "next/dist/server/web/spec-extension/user-agent";
 import { getTodo } from "../utils/getTodo";
 
@@ -19,8 +19,8 @@ const Home = ({ todo_list }) => {
 
   // console.log(newTodo !== "" && matchResult.length > 0);
   useEffect(() => {
-    setTodos(todo_list?.data);
-  }, [todo_list?.data]);
+    setTodos(todo_list);
+  }, [todo_list]);
 
   const inputHandler = (e) => {
     let input = e.target.value;
@@ -275,11 +275,24 @@ Tho its just a todo list app but still a good practice
 that cause the site to preload from the server so SSG would be a better option*/
 export async function getStaticProps() {
   try {
-    const { ...res } = await getTodo();
+    const { data } = await api.get("/todo_list.json");
 
+    //check if there're data being returned otherwise "data not found"
+    let todo_list = [];
+    if (data) {
+      //convert returned object from firebase to array
+      for (const key in data) {
+        todo_list.push({
+          id: key,
+          todo: data[key].todo,
+          isCompleted: data[key].isCompleted,
+          createdAt: data[key].createdAt,
+        });
+      }
+    }
     return {
       props: {
-        todo_list: res?.data,
+        todo_list,
       },
       revalidate: 10, // In seconds
     };

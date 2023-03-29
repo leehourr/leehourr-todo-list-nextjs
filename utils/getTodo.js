@@ -5,10 +5,9 @@ export const getTodo = async () => {
     const { data } = await api.get("/todo_list.json");
 
     //check if there're data being returned otherwise "data not found"
-
+    let todo_list = [];
     if (data) {
       //convert returned object from firebase to array
-      let todo_list = [];
       for (const key in data) {
         todo_list.push({
           id: key,
