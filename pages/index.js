@@ -10,7 +10,7 @@ const Home = ({ todo_list }) => {
   // const [editedTodo, setEditedTodo] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [isEdit, setIsEdit] = useState(false);
-  const [todoId, setTodoId] = useState();
+  const [todoId, setTodoId] = useState(null);
   const [matchResult, setMatchResult] = useState([]);
   const [startTyping, setStartTyping] = useState(false);
   const [confirm, setConfirm] = useState(false);
@@ -195,6 +195,7 @@ const Home = ({ todo_list }) => {
         setIsEdit(false);
         setNewTodo("");
         setConfirm(false);
+        setTodoId(null);
       }
     } catch (err) {
       setTimeout(() => {
@@ -246,6 +247,8 @@ const Home = ({ todo_list }) => {
           <button
             onClick={() => {
               setConfirm(false);
+              setNewTodo("");
+              setTodoId(null);
             }}
           >
             Cancel
