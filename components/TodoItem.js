@@ -13,7 +13,8 @@ const TodoItem = ({
 
   const removeTodoHandler = () => {
     // console.log(id);
-    onRemove(id);
+    const updatedTodo = { id, remove: true };
+    onRemove(updatedTodo);
   };
 
   const markAsComplete = () => {
@@ -29,7 +30,7 @@ const TodoItem = ({
   };
 
   const editHandler = () => {
-    const updatedTodo = { id, todo };
+    const updatedTodo = { id, todo, edit: true };
     onEdit(updatedTodo);
   };
   return (

@@ -13,22 +13,42 @@ const Home = ({ todo_list }) => {
   const [todoId, setTodoId] = useState(null);
   const [matchResult, setMatchResult] = useState([]);
   const [startTyping, setStartTyping] = useState(false);
-  const [confirm, setConfirm] = useState(false);
+  const [confirmEdit, setConfirmEdit] = useState(false);
+  const [confirmRemove, setConfirmRemove] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // console.log(todos);
 
   // console.log(newTodo !== "" && matchResult.length > 0);
   useEffect(() => {
+    // const getTodo = async () => {
+    //   const { data } = await api.get("/todo_list.json");
+    //   let todo_list = [];
+    //   if (data) {
+    //     //convert returned object from firebase to array
+    //     for (const key in data) {
+    //       todo_list.push({
+    //         id: key,
+    //         todo: data[key].todo,
+    //         isCompleted: data[key].isCompleted,
+    //         createdAt: data[key].createdAt,
+    //       });
+    //     }
+    //   }
+    //   setTodos(todo_list);
+    // };
+    // getTodo();
     setTodos(todo_list);
   }, [todo_list]);
 
   const inputHandler = (e) => {
     let input = e.target.value;
     setNewTodo(input);
-    console.log(input.length, input);
+    // console.log(input.length, input);
     if (input === "") {
       // console.log("true");
       setIsEdit(false);
+      setConfirmEdit(false);
       setErrorMessage("");
       setMatchResult([]);
       return;
@@ -43,7 +63,7 @@ const Home = ({ todo_list }) => {
         // setMatchResult([]);
         if (i.todo.slice(0, input.length).trim() === input.trim()) {
           match.push(i.todo);
-          console.log(match);
+          // console.log(match);
         }
         // console.log(match);
         setMatchResult(match);
@@ -67,31 +87,37 @@ const Home = ({ todo_list }) => {
     const now = new Date();
     const timestamp = Math.floor(now.getTime() / 1000) * 1000;
     const newTodoObject = {
-      id: crypto.randomUUID(),
+      // id: crypto.randomUUID(),
       todo: newTodo,
       isCompleted: false,
       createdAt: timestamp,
     };
-    setTodos([...todos, newTodoObject]);
     try {
-      await axios.post("/api/new-todo", {
-        todo: newTodo,
-        isCompleted: false,
-        createdAt: timestamp,
-      });
-      // console.log(res);
+      setIsLoading(true);
+      await axios.post("/api/new-todo", newTodoObject);
+      const { data } = await api.get("/todo_list.json");
+      let todo_list = [];
+      if (data) {
+        //convert returned object from firebase to array
+        for (const key in data) {
+          todo_list.push({
+            id: key,
+            todo: data[key].todo,
+            isCompleted: data[key].isCompleted,
+            createdAt: data[key].createdAt,
+          });
+        }
+      }
+      setTodos(todo_list);
+      setNewTodo("");
+      setIsLoading(false);
     } catch (err) {
       // console.log(err.response);
-      setTimeout(() => {
-        setTodos((prev) => prev.filter((todo) => todo.id !== newTodoObject.id));
-        setErrorMessage("Failed to add a new task! Try reload the page");
-      }, 2000);
     }
-    setNewTodo("");
   };
 
   //remove todo
-  const removeHandler = async (id) => {
+  const removeHandler = async () => {
     setErrorMessage("");
     if (todos.length === 1) {
       setErrorMessage(
@@ -100,15 +126,17 @@ const Home = ({ todo_list }) => {
       return;
     }
     try {
-      setTodos((prev) => prev.filter((todo) => todo.id !== id));
-      const res = await axios.post("/api/remove-todo", { id });
-      console.log(res);
+      setTodos((prev) => prev.filter((todo) => todo.id !== todoId));
+      const res = await axios.post("/api/remove-todo", { id: todoId });
+      // console.log(res);
+      setConfirmRemove(false);
     } catch (err) {
       // console.log(err);
       // console.log("after delete");
       setTimeout(() => {
         setTodos(todo_list);
         setErrorMessage("Failed to remove! Try reload the page");
+        setConfirmRemove(false);
       }, 2000);
     }
   };
@@ -165,22 +193,28 @@ const Home = ({ todo_list }) => {
 
   //update todo
   const getTodoFromList = (todo) => {
-    setIsEdit(true);
-    setNewTodo(todo?.todo);
+    if (todo.edit) {
+      setIsEdit(true);
+      setNewTodo(todo?.todo);
+      inputRef?.current.focus();
+    }
+    if (todo.remove) {
+      setConfirmRemove(true);
+    }
     setTodoId(todo.id);
-    inputRef?.current.focus();
     // console.log(todo.id);
   };
 
   const editHandler = async (e) => {
     // console.log("submit");
     setErrorMessage("");
-    setConfirm(true);
+    setConfirmEdit(true);
     console.log(newTodo);
     try {
       if (checkIfListExist(newTodo)) {
         return;
       }
+
       const updatedTodo = todos.map((todo) =>
         todo.id === todoId ? { ...todo, todo: newTodo } : todo
       );
@@ -194,14 +228,17 @@ const Home = ({ todo_list }) => {
       if (res.status === 200) {
         setIsEdit(false);
         setNewTodo("");
-        setConfirm(false);
+        setConfirmEdit(false);
         setTodoId(null);
       }
     } catch (err) {
       setTimeout(() => {
         setTodos(todo_list);
+        setIsEdit(false);
         setErrorMessage("Failed to update! Try reload the page");
         setNewTodo("");
+        setConfirmEdit(false);
+        setTodoId(null);
       }, 2000);
     }
   };
@@ -218,6 +255,8 @@ const Home = ({ todo_list }) => {
   return (
     <main>
       <h1>Todo List</h1>
+
+      {/* Form submission  */}
       <form onSubmit={isEdit ? undefined : addTodoHandler}>
         <input
           onFocus={() => {
@@ -229,7 +268,7 @@ const Home = ({ todo_list }) => {
             // setMatchResult([]);
           }}
           onKeyDown={(e) => {
-            if (e.key === "Enter" && isEdit) setConfirm(true);
+            if (e.key === "Enter" && isEdit) setConfirmEdit(true);
           }}
           ref={inputRef}
           type="text"
@@ -242,11 +281,14 @@ const Home = ({ todo_list }) => {
           Add Todo
         </button>
       </form>
-      {confirm && (
+
+      {isLoading && <h2>Adding a new task...</h2>}
+      {/* confirmEdit */}
+      {confirmEdit && (
         <div>
           <button
             onClick={() => {
-              setConfirm(false);
+              setConfirmEdit(false);
               setNewTodo("");
               setTodoId(null);
             }}
@@ -262,6 +304,29 @@ const Home = ({ todo_list }) => {
           </button>
         </div>
       )}
+
+      {/* Confirm remove  */}
+      {confirmRemove && (
+        <div>
+          <button
+            onClick={() => {
+              setConfirmRemove(false);
+              setTodoId(null);
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => {
+              removeHandler();
+            }}
+          >
+            Confirm remove
+          </button>
+        </div>
+      )}
+
+      {/* Search result  */}
       {newTodo !== "" && matchResult.length > 0 ? (
         <div>
           <h2>Match result</h2>
@@ -272,10 +337,14 @@ const Home = ({ todo_list }) => {
       ) : (
         newTodo !== "" &&
         startTyping &&
-        !isEdit && <h2>No result. Create a new one instead!</h2>
+        !isEdit &&
+        !isLoading && <h2>No result. Create a new one instead!</h2>
       )}
 
+      {/* error message  */}
       {errorMessage !== "" && <h3>{errorMessage}</h3>}
+
+      {/* render the list  */}
       <ul>
         {todos
           .sort((a, b) => {
@@ -287,7 +356,7 @@ const Home = ({ todo_list }) => {
               id={todo.id}
               todo={todo.todo}
               isCompleted={todo.isCompleted}
-              onRemove={removeHandler}
+              onRemove={getTodoFromList}
               onMarkAsComplete={markAsComplete}
               onMarkAsIncomplete={markAsInomplete}
               onEdit={getTodoFromList}
@@ -328,7 +397,7 @@ export async function getStaticProps() {
       props: {
         todo_list,
       },
-      revalidate: 10, // In seconds
+      revalidate: 1, // In seconds
     };
   } catch (err) {
     console.log(err);
