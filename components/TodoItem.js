@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 const TodoItem = ({
   id,
@@ -8,9 +8,16 @@ const TodoItem = ({
   onMarkAsComplete,
   onMarkAsIncomplete,
   onEdit,
+  doneEdit,
 }) => {
   const [isHovering, setIsHovering] = useState(false);
-
+  const [isEdit, setIsEdit] = useState(false);
+  const [isTaskCompleted, setIsTaskCompleted] = useState(false);
+  useEffect(() => {
+    if (!doneEdit) {
+      setIsEdit(false);
+    }
+  }, [doneEdit]);
   const removeTodoHandler = () => {
     // console.log(id);
     const updatedTodo = { id, remove: true };
@@ -30,7 +37,13 @@ const TodoItem = ({
   };
 
   const editHandler = () => {
+    if (isCompleted) {
+      setIsTaskCompleted(true);
+      return;
+    }
     const updatedTodo = { id, todo, edit: true };
+    setIsEdit(true);
+    console.log(id, "is being edited");
     onEdit(updatedTodo);
   };
   return (
@@ -44,9 +57,16 @@ const TodoItem = ({
       style={{ cursor: "pointer", width: "fit-content" }}
       key={id}
     >
-      <h3>
+      {/* style={` "text-decoration":"line-through"}`} */}
+      <h3
+        style={{
+          textDecoration: isCompleted ? "line-through" : "none",
+        }}
+      >
         {todo} ({isCompleted ? "completed" : "not completed"})
       </h3>
+      {isEdit && <span>Is being edited.</span>}
+      {isTaskCompleted && <span>You can not edit the completed task!</span>}
       {isHovering && (
         <div>
           <button onClick={markAsComplete.bind(null, id)}>

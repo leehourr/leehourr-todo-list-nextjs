@@ -16,6 +16,8 @@ const Home = ({ todo_list }) => {
   const [confirmEdit, setConfirmEdit] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  // const [completedList, setCompletedList] = useState([]);
+  // const [inCompletedList, setInCompletedList] = useState([]);
 
   // console.log(todos);
 
@@ -39,7 +41,20 @@ const Home = ({ todo_list }) => {
     // };
     // getTodo();
     setTodos(todo_list);
+    // setCompletedList(
+    //   todo_list.filter((todo) => {
+    //     return todo.isCompleted;
+    //   })
+    // );
+    // setInCompletedList(
+    //   todo_list.filter((todo) => {
+    //     return !todo.isCompleted;
+    //   })
+    // );
   }, [todo_list]);
+
+  // console.log("completed list", completedList);
+  // console.log("incompleted list", inCompletedList);
 
   const inputHandler = (e) => {
     let input = e.target.value;
@@ -61,7 +76,9 @@ const Home = ({ todo_list }) => {
         //   : // setMatchResult((prev) => [...prev, i.todo])
         //     console.log("no match");
         // setMatchResult([]);
-        if (i.todo.slice(0, input.length).trim() === input.trim()) {
+        if (
+          i.todo.slice(0, input.length).trim() === input.toLowerCase().trim()
+        ) {
           match.push(i.todo);
           // console.log(match);
         }
@@ -72,7 +89,6 @@ const Home = ({ todo_list }) => {
     }
   };
 
-  //add todo
   const addTodoHandler = async (e) => {
     e.preventDefault();
     setErrorMessage("");
@@ -116,7 +132,6 @@ const Home = ({ todo_list }) => {
     }
   };
 
-  //remove todo
   const removeHandler = async () => {
     setErrorMessage("");
     if (todos.length === 1) {
@@ -141,7 +156,6 @@ const Home = ({ todo_list }) => {
     }
   };
 
-  //Mark as Complete/Incomplete
   // const toggleComplete = async (id) => {
   //   const updatedTodos = todos.map((todo) =>
   //     todo.id === id ? { ...todo, isCompleted: !todo.isCompleted } : todo
@@ -256,7 +270,6 @@ const Home = ({ todo_list }) => {
     <main>
       <h1>Todo List</h1>
 
-      {/* Form submission  */}
       <form onSubmit={isEdit ? undefined : addTodoHandler}>
         <input
           onFocus={() => {
@@ -347,9 +360,16 @@ const Home = ({ todo_list }) => {
       {/* render the list  */}
       <ul>
         {todos
-          .sort((a, b) => {
-            return b.createdAt - a.createdAt;
+          .sort(function (a, b) {
+            if (a.todo < b.todo) {
+              return -1;
+            }
+            if (a.todo > b.todo) {
+              return 1;
+            }
+            return 0;
           })
+          .filter((todo) => !todo.isCompleted)
           .map((todo) => (
             <TodoItem
               key={todo.id}
@@ -362,6 +382,85 @@ const Home = ({ todo_list }) => {
               onEdit={getTodoFromList}
             />
           ))}
+        {todos
+          .sort(function (a, b) {
+            if (a.todo < b.todo) {
+              return -1;
+            }
+            if (a.todo > b.todo) {
+              return 1;
+            }
+            return 0;
+          })
+          .filter((todo) => todo.isCompleted)
+          .map((todo) => (
+            <TodoItem
+              key={todo.id}
+              id={todo.id}
+              todo={todo.todo}
+              isCompleted={todo.isCompleted}
+              onRemove={getTodoFromList}
+              onMarkAsComplete={markAsComplete}
+              onMarkAsIncomplete={markAsInomplete}
+              onEdit={getTodoFromList}
+            />
+          ))}
+        {/* {todos
+          .sort(function (a, b) {
+            if (a.todo < b.todo) {
+              return -1;
+            }
+            if (a.todo > b.todo) {
+              return 1;
+            }
+            return 0;
+          })
+          .filter()} */}
+        {/* {inCompletedList
+          .sort(function (a, b) {
+            if (a.todo < b.todo) {
+              return -1;
+            }
+            if (a.todo > b.todo) {
+              return 1;
+            }
+            return 0;
+          })
+          .map((todo) => (
+            <TodoItem
+              key={todo.id}
+              id={todo.id}
+              todo={todo.todo}
+              isCompleted={todo.isCompleted}
+              onRemove={getTodoFromList}
+              onMarkAsComplete={markAsComplete}
+              onMarkAsIncomplete={markAsInomplete}
+              onEdit={getTodoFromList}
+              doneEdit={isEdit}
+            />
+          ))}
+        {completedList
+          .sort(function (a, b) {
+            if (a.todo < b.todo) {
+              return -1;
+            }
+            if (a.todo > b.todo) {
+              return 1;
+            }
+            return 0;
+          })
+          .map((todo) => (
+            <TodoItem
+              key={todo.id}
+              id={todo.id}
+              todo={todo.todo}
+              isCompleted={todo.isCompleted}
+              onRemove={getTodoFromList}
+              onMarkAsComplete={markAsComplete}
+              onMarkAsIncomplete={markAsInomplete}
+              onEdit={getTodoFromList}
+            />
+          ))} */}
       </ul>
     </main>
   );
